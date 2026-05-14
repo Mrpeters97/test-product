@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Dialog, DialogContent } from './dialog'
 import { useProduct } from '../../context/ProductContext2'
 import { computeCompleteness, groupByRequired } from '../../utils/completeness'
@@ -157,8 +157,11 @@ const Section = ({ title, entries, totalMissing, onNavigate, emptyLabel }) => {
   )
 }
 
-export default function CompletenessModal({ open, onOpenChange }) {
+export default function CompletenessModal({ open, onOpenChange, scrollTo = null }) {
   const { productData, handleVariantChange, handleLanguageChange } = useProduct()
+  const scrollContainerRef = useRef(null)
+  const requiredSectionRef = useRef(null)
+  const optionalSectionRef = useRef(null)
 
   const stats = useMemo(() => computeCompleteness(productData), [productData])
   const { required, optional } = useMemo(() => groupByRequired(stats.perField), [stats.perField])
@@ -166,6 +169,17 @@ export default function CompletenessModal({ open, onOpenChange }) {
   const sumMissing = (list) => list.reduce((sum, e) => sum + e.missingCount, 0)
   const requiredMissing = sumMissing(required)
   const optionalMissing = sumMissing(optional)
+
+  useEffect(() => {
+    if (!open || !scrollTo) return
+    const timer = setTimeout(() => {
+      const target = scrollTo === 'required' ? requiredSectionRef.current : optionalSectionRef.current
+      if (target && scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({ top: target.offsetTop, behavior: 'smooth' })
+      }
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [open, scrollTo])
 
   const handleNavigate = (entry, slot) => {
     onOpenChange(false)
@@ -213,29 +227,34 @@ export default function CompletenessModal({ open, onOpenChange }) {
         </div>
 
         <div
+          ref={scrollContainerRef}
           style={{
             padding: '20px 32px 32px 32px',
             overflowY: 'auto',
             flex: 1,
           }}
         >
-          <Section
-            title="Missing required attributes"
-            entries={required}
-            totalMissing={requiredMissing}
-            onNavigate={handleNavigate}
-            emptyLabel="All required attributes are filled in."
-          />
+          <div ref={requiredSectionRef}>
+            <Section
+              title="Missing required attributes"
+              entries={required}
+              totalMissing={requiredMissing}
+              onNavigate={handleNavigate}
+              emptyLabel="All required attributes are filled in."
+            />
+          </div>
 
           <div style={{ height: '1px', backgroundColor: '#E4E4E7', margin: '8px 0 24px 0' }} />
 
-          <Section
-            title="Other missing attributes"
-            entries={optional}
-            totalMissing={optionalMissing}
-            onNavigate={handleNavigate}
-            emptyLabel="All optional attributes are filled in."
-          />
+          <div ref={optionalSectionRef}>
+            <Section
+              title="Other missing attributes"
+              entries={optional}
+              totalMissing={optionalMissing}
+              onNavigate={handleNavigate}
+              emptyLabel="All optional attributes are filled in."
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

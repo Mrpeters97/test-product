@@ -1,7 +1,10 @@
 import { useEffect, useState, useRef } from 'react'
 import { PRODUCT_CARDS } from '../../constants/productCards'
+import CompletenessWidget from '../ui/CompletenessWidget'
+import { useProduct } from '../../context/ProductContext2'
 
 export default function RightAnchorMenu() {
+  const { activeTab } = useProduct()
   const [activeSection, setActiveSection] = useState(PRODUCT_CARDS.find(c => !c.hideTitle)?.id)
   const menuRef = useRef(null)
 
@@ -68,9 +71,11 @@ export default function RightAnchorMenu() {
         alignItems: 'flex-start',
         gap: '16px',
         position: 'sticky',
-        top: '200px',
+        top: '150px',
       }}
     >
+      <CompletenessWidget />
+      {activeTab === 'default' && <div style={{ height: '1px', background: 'var(--base-border, #E4E4E7)', alignSelf: 'stretch', width: '100%' }} />}
       <span style={{
         overflow: 'hidden',
         color: 'var(--base-sidebar-foreground, #3F3F46)',

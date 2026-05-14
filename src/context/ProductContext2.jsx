@@ -27,6 +27,7 @@ export function ProductProvider({ children }) {
   const [language, setLanguage] = useState('English')
   const [activeTab, setActiveTab] = useState('default') // 'default' or 'channel-specific'
   const [attributeFilter, setAttributeFilter] = useState('all')
+  const [disconnectedFields, setDisconnectedFields] = useState({})
   
   // Helper to generate variant-channel key
   const getVariantChannelKey = useCallback((v = variant, c = channel) => {
@@ -288,6 +289,9 @@ export function ProductProvider({ children }) {
   }, [productData, variant, language])
 
   const isValueConnected = useCallback((field) => {
+    const disconnectKey = `${field}_${variant}_${channel}`
+    if (disconnectedFields[disconnectKey]) return false
+
     const currentValue = getProductFieldValue(field)
     const defaultValue = getDefaultValue(field)
 
@@ -295,12 +299,78 @@ export function ProductProvider({ children }) {
       return JSON.stringify(currentValue) === JSON.stringify(defaultValue)
     }
     return currentValue === defaultValue
-  }, [getProductFieldValue, getDefaultValue])
+  }, [getProductFieldValue, getDefaultValue, disconnectedFields, variant, channel])
+
+  const copyDefaultToChannel = useCallback((field) => {
+    const fieldData = productData[field]
+    if (!fieldData || !fieldData.differsOn) return
+
+    const isLanguageField = fieldData.differsOn?.includes('language')
+
+    setProductData(prev => {
+      const prevFieldData = prev[field]
+      const updatedValues = { ...prevFieldData.variantChannelValues }
+
+      if (isLanguageField) {
+        SUPPORTED_LANGUAGES.forEach(lang => {
+          const defaultKey = `${variant}__${lang}`
+          const val = prevFieldData.variantChannelValues[defaultKey]
+          const channelKey = `${variant}_${channel}_${lang}`
+          updatedValues[channelKey] = val !== undefined && val !== null
+            ? (Array.isArray(val) ? [...val] : val)
+            : (ARRAY_FIELDS.has(field) ? [''] : '')
+        })
+      } else {
+        const defaultKey = `${variant}_`
+        const val = prevFieldData.variantChannelValues[defaultKey]
+        const channelKey = `${variant}_${channel}`
+        updatedValues[channelKey] = val !== undefined && val !== null
+          ? (Array.isArray(val) ? [...val] : val)
+          : (ARRAY_FIELDS.has(field) ? [''] : '')
+      }
+
+      return {
+        ...prev,
+        [field]: { ...prevFieldData, variantChannelValues: updatedValues }
+      }
+    })
+
+    setDisconnectedFields(prev => ({
+      ...prev,
+      [`${field}_${variant}_${channel}`]: true
+    }))
+  }, [productData, variant, channel])
 
   const restoreChannelValue = useCallback((field) => {
-    const defaultValue = getDefaultValue(field)
-    updateProductField(field, defaultValue)
-  }, [getDefaultValue, updateProductField])
+    const fieldData = productData[field]
+    if (!fieldData) return
+
+    const isLanguageField = fieldData.differsOn?.includes('language')
+
+    setProductData(prev => {
+      const prevFieldData = prev[field]
+      const updatedValues = { ...prevFieldData.variantChannelValues }
+
+      if (isLanguageField) {
+        SUPPORTED_LANGUAGES.forEach(lang => {
+          delete updatedValues[`${variant}_${channel}_${lang}`]
+        })
+      } else {
+        delete updatedValues[`${variant}_${channel}`]
+      }
+
+      return {
+        ...prev,
+        [field]: { ...prevFieldData, variantChannelValues: updatedValues }
+      }
+    })
+
+    setDisconnectedFields(prev => {
+      const next = { ...prev }
+      delete next[`${field}_${variant}_${channel}`]
+      return next
+    })
+  }, [productData, variant, channel])
 
   const resetProductData = useCallback(() => {
     setProductData(prev => {
@@ -353,6 +423,7 @@ export function ProductProvider({ children }) {
     updateProductFieldTranslations,
     getDefaultValue,
     isValueConnected,
+    copyDefaultToChannel,
     restoreChannelValue,
     resetProductData,
     getFieldLanguageValues,

@@ -34,6 +34,7 @@ export const PRODUCT_CARDS = [
         type: 'text',
         differsOn: 'variant-channel-language',
         placeholder: 'Unique variant name',
+        hideCopy: true,
       },
       {
         key: 'brand',
@@ -50,6 +51,7 @@ export const PRODUCT_CARDS = [
         type: 'text-array',
         differsOn: 'variant',
         placeholder: 'Unique EAN',
+        hideCopy: true,
       },
     ],
   },

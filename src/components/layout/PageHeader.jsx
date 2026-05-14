@@ -1,33 +1,13 @@
-import { useMemo, useState, useRef } from 'react'
 import { Button } from '../ui/button'
 import { VerticalDotsIcon } from '../ui/Icons'
-import CompletenessIcon from '../ui/CompletenessIcon'
-import CompletenessModal from '../ui/CompletenessModal'
 import { useScroll } from '../../context/ScrollContext'
 import { useProduct } from '../../context/ProductContext2'
 import { STICKY_CONFIG } from '../../constants/selectorConfig'
-import { computeCompleteness, completenessColor, groupByRequired } from '../../utils/completeness'
 
 export default function PageHeader() {
   const { scrollY } = useScroll()
-  const { activeTab, setActiveTab, productData } = useProduct()
-  const [completenessOpen, setCompletenessOpen] = useState(false)
-  const [publishHovered, setPublishHovered] = useState(false)
-  const publishLeaveTimer = useRef(null)
-
-  const handlePublishEnter = () => {
-    clearTimeout(publishLeaveTimer.current)
-    setPublishHovered(true)
-  }
-  const handlePublishLeave = () => {
-    publishLeaveTimer.current = setTimeout(() => setPublishHovered(false), 100)
-  }
-  const completeness = useMemo(() => computeCompleteness(productData), [productData])
-  const { required } = useMemo(() => groupByRequired(completeness.perField), [completeness.perField])
-  const requiredMissing = useMemo(() => required.reduce((sum, e) => sum + e.missingCount, 0), [required])
-  const iconColor = completenessColor(completeness.percentComplete)
+  const { activeTab, setActiveTab } = useProduct()
   const isVariantSelectorSticky = scrollY >= STICKY_CONFIG.triggerScroll
-  const isPublishDisabled = requiredMissing > 0
 
   // Animation progress: 0 (no scroll) to 1 (>= 60px scroll)
   const progress = Math.min(scrollY / 60, 1)
@@ -129,28 +109,6 @@ export default function PageHeader() {
             Draft
           </span>
 
-          {activeTab !== 'channel-specific' && (
-            <>
-              {/* Divider */}
-              <div style={{
-                height: '32px',
-                width: '1px',
-                background: 'var(--base-border, #E4E4E7)',
-              }} />
-
-              {/* Completeness Score Button */}
-              <Button
-                data-tour="completeness-button"
-                variant="outline"
-                size="sm"
-                onClick={() => setCompletenessOpen(true)}
-                className="h-8 gap-2 rounded-full border-gray-200 px-3 text-xs font-medium text-gray-600 hover:bg-gray-50"
-              >
-                <CompletenessIcon color={iconColor} />
-                {completeness.percentComplete}% Complete
-              </Button>
-            </>
-          )}
         </div>
 
         {/* Right side: Autosaved, Publish CTA, Menu */}
@@ -165,91 +123,23 @@ export default function PageHeader() {
           }}>
             Autosaved: 28-01-2026 16:07
           </span>
-          <div
-            style={{ position: 'relative', display: 'inline-block', cursor: 'default' }}
-            onMouseEnter={handlePublishEnter}
-            onMouseLeave={handlePublishLeave}
+          <button
+            data-tour="publish-button"
+            style={{
+              borderRadius: 'var(--border-radius-md, 6px)',
+              padding: '10px 16px',
+              fontSize: 'var(--typography-base-sizes-small-font-size, 14px)',
+              fontFamily: 'var(--typography-font-family-font-sans, Inter)',
+              fontWeight: 'var(--font-weight-medium, 500)',
+              lineHeight: 'var(--typography-base-sizes-small-line-height, 20px)',
+              border: 'none',
+              cursor: 'pointer',
+              backgroundColor: 'var(--base-foreground, #18181B)',
+              color: 'var(--base-primary-foreground, #FAFAFA)',
+            }}
           >
-            <button
-              data-tour="publish-button"
-              disabled={isPublishDisabled}
-              style={{
-                borderRadius: 'var(--border-radius-md, 6px)',
-                padding: '10px 16px',
-                fontSize: 'var(--typography-base-sizes-small-font-size, 14px)',
-                fontFamily: 'var(--typography-font-family-font-sans, Inter)',
-                fontWeight: 'var(--font-weight-medium, 500)',
-                lineHeight: 'var(--typography-base-sizes-small-line-height, 20px)',
-                border: 'none',
-                cursor: 'inherit',
-                transition: 'all 0.2s ease',
-                pointerEvents: 'none',
-                backgroundColor: 'var(--base-foreground, #18181B)',
-                color: 'var(--base-primary-foreground, #FAFAFA)',
-                opacity: isPublishDisabled ? 0.5 : 1,
-              }}
-            >
-              Add to catalog
-            </button>
-            {isPublishDisabled && publishHovered && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 8px)',
-                  right: 0,
-                  display: 'flex',
-                  width: '320px',
-                  maxWidth: 'var(--max-width-max-w-xs, 320px)',
-                  padding: 'var(--Gap-5, 20px)',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  gap: 'var(--Gap-4, 16px)',
-                  borderRadius: 'var(--border-radius-md, 6px)',
-                  border: '1px solid var(--base-border, #E4E4E7)',
-                  background: 'var(--base-popover, #FFF)',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                  zIndex: 99999,
-                }}
-                onMouseEnter={handlePublishEnter}
-                onMouseLeave={handlePublishLeave}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                  <div style={{
-                    color: 'var(--base-popover-foreground, #09090B)',
-                    fontFamily: 'var(--typography-font-family-font-sans, Inter)',
-                    fontSize: 'var(--typography-base-sizes-base-font-size, 16px)',
-                    fontStyle: 'normal',
-                    fontWeight: 'var(--font-weight-semibold, 600)',
-                    lineHeight: 'var(--typography-base-sizes-base-line-height, 24px)',
-                  }}>
-                    Unable to add to catalog yet
-                  </div>
-                  <div style={{
-                    color: 'var(--base-popover-foreground, #09090B)',
-                    fontFamily: 'var(--typography-font-family-font-sans, Inter)',
-                    fontSize: 'var(--typography-base-sizes-small-font-size, 14px)',
-                    fontStyle: 'normal',
-                    fontWeight: 'var(--font-weight-normal, 400)',
-                    lineHeight: 'var(--typography-base-sizes-small-line-height, 20px)',
-                  }}>
-                    Fill in all required attributes before publishing to the catalog. See completeness score for more information
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setPublishHovered(false)
-                    setCompletenessOpen(true)
-                  }}
-                  className="h-8 gap-2 rounded-full border-gray-200 px-3 text-xs font-medium text-gray-600 hover:bg-gray-50"
-                >
-                  <CompletenessIcon color={iconColor} />
-                  {completeness.percentComplete}% Complete
-                </Button>
-              </div>
-            )}
-          </div>
+            Add to catalog
+          </button>
           <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
             <VerticalDotsIcon />
           </Button>
@@ -325,7 +215,6 @@ export default function PageHeader() {
         </div>
       </div>
       </div>
-      <CompletenessModal open={completenessOpen} onOpenChange={setCompletenessOpen} />
     </div>
   )
 }

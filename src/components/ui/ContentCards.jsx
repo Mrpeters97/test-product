@@ -18,7 +18,7 @@ import { LinkIcon, UnlinkIcon, ClipboardIcon, TrashIcon } from './Icons'
 import { renderField, getCopyModeMessage, READONLY_INPUT_STYLE, DISABLED_INPUT_STYLE, isValueEmpty } from '../../utils/formHelpers'
 
 export default function ProductInformation() {
-  const { productData, updateProductField, getProductFieldValue, markFieldAsCopied, updateProductFieldTranslations, variant, channel, language, activeTab, getDefaultValue, isValueConnected, restoreChannelValue, attributeFilter, getFieldLanguageValues } = useProduct()
+  const { productData, updateProductField, getProductFieldValue, markFieldAsCopied, updateProductFieldTranslations, variant, channel, language, activeTab, getDefaultValue, isValueConnected, copyDefaultToChannel, restoreChannelValue, attributeFilter, getFieldLanguageValues } = useProduct()
   const [showToast, setShowToast] = useState(false)
   const [toast, setToast] = useState({ message: 'Values successfully copied', variant: 'success' })
   const [isLoading, setIsLoading] = useState(false)
@@ -104,24 +104,9 @@ export default function ProductInformation() {
   }, [triggerToast])
 
   const handleChangeToChannelSpecific = useCallback((field) => {
-    const fieldData = productData[field]
-    const isLanguageField = fieldData?.differsOn?.includes('language')
-    const fieldDef = PRODUCT_CARDS.flatMap(c => c.fields).find(f => f.key === field)
-    const emptyValue = fieldDef?.type === 'text-array' ? [''] : ''
-
-    if (isLanguageField) {
-      // Write empty to channel-specific key for ALL languages so isValueConnected becomes false
-      const emptyTranslations = SUPPORTED_LANGUAGES.reduce((acc, lang) => {
-        acc[lang] = emptyValue
-        return acc
-      }, {})
-      updateProductFieldTranslations(field, emptyTranslations)
-    } else {
-      updateProductField(field, emptyValue)
-    }
-
-    triggerToast('Field changed to channel specific value', 'success')
-  }, [productData, updateProductField, updateProductFieldTranslations, triggerToast])
+    copyDefaultToChannel(field)
+    triggerToast('Default values copied to channel', 'success')
+  }, [copyDefaultToChannel, triggerToast])
 
   const isChannelSpecific = useCallback((field) => {
     return field.differsOn && field.differsOn.includes('channel')
@@ -240,36 +225,70 @@ export default function ProductInformation() {
                                             <>
                                               {activeTab === 'default' && (
                                                 <>
-                                                  <CopyAction
-                                                    field={field.key}
-                                                    onCopyConfirm={handleCopyConfirm}
-                                                    disabled={isValueEmpty(getProductFieldValue(field.key))}
-                                                    icon={<ClipboardIcon />}
-                                                  />
+                                                  {!field.hideCopy ? (
+                                                    <button
+                                                      onClick={() => {
+                                                        if (arrayValue.length > 1) {
+                                                          handleRemoveArrayField(field.key, 0)
+                                                        } else {
+                                                          handleArrayFieldChange(field.key, 0, '')
+                                                        }
+                                                      }}
+                                                      disabled={fieldConfig.readonly || fieldConfig.isInheritedChannelValue || (arrayValue.length <= 1 && isValueEmpty(arrayValue[0]))}
+                                                      style={{
+                                                        borderRadius: 'var(--border-radius-md, 6px)',
+                                                        border: '1px solid var(--base-input, #E4E4E7)',
+                                                        display: 'flex',
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                        background: 'white',
+                                                        cursor: (fieldConfig.readonly || (arrayValue.length <= 1 && isValueEmpty(arrayValue[0]))) ? 'not-allowed' : 'pointer',
+                                                        opacity: (fieldConfig.readonly || (arrayValue.length <= 1 && isValueEmpty(arrayValue[0]))) ? 0.5 : 1,
+                                                      }}
+                                                      className="shrink-0"
+                                                    >
+                                                      <TrashIcon />
+                                                    </button>
+                                                  ) : (
+                                                    <div className="h-10 w-10 shrink-0"></div>
+                                                  )}
                                                   <div className="h-10 border-l border-[#E4E4E7]"></div>
                                                 </>
                                               )}
                                               {activeTab === 'channel-specific' && (
                                                 <>
-                                                  <LinkAction
-                                                    field={field.key}
-                                                    currentValue={getProductFieldValue(field.key)}
-                                                    defaultValue={getDefaultValue(field.key)}
-                                                    isConnected={isValueConnected(field.key)}
-                                                    onRestore={restoreChannelValue}
-                                                    onChangeToChannelSpecific={handleChangeToChannelSpecific}
-                                                    disabled={isValueConnected(field.key) ? isValueEmpty(getProductFieldValue(field.key)) : false}
-                                                  />
-                                                  {isChannelSpecific(field) ? (
-                                                    <CopyToChannelsAction
-                                                      icon={<ClipboardIcon />}
-                                                      field={field.key}
-                                                      onCopyConfirm={handleCopyConfirm}
-                                                      disabled={isValueConnected(field.key) || isValueEmpty(getProductFieldValue(field.key))}
-                                                    />
+                                                  {!fieldConfig.isInheritedChannelValue ? (
+                                                    <button
+                                                      onClick={() => {
+                                                        if (arrayValue.length > 1) {
+                                                          handleRemoveArrayField(field.key, 0)
+                                                        } else {
+                                                          handleArrayFieldChange(field.key, 0, '')
+                                                        }
+                                                      }}
+                                                      disabled={arrayValue.length <= 1 && isValueEmpty(arrayValue[0])}
+                                                      style={{
+                                                        borderRadius: 'var(--border-radius-md, 6px)',
+                                                        border: '1px solid var(--base-input, #E4E4E7)',
+                                                        display: 'flex',
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                        background: 'white',
+                                                        cursor: (arrayValue.length <= 1 && isValueEmpty(arrayValue[0])) ? 'not-allowed' : 'pointer',
+                                                        opacity: (arrayValue.length <= 1 && isValueEmpty(arrayValue[0])) ? 0.5 : 1,
+                                                      }}
+                                                      className="shrink-0"
+                                                    >
+                                                      <TrashIcon />
+                                                    </button>
                                                   ) : (
                                                     <div className="h-10 w-10 shrink-0"></div>
                                                   )}
+                                                  <div className="h-10 w-10 shrink-0"></div>
                                                   <div className="h-10 border-l border-[#E4E4E7]"></div>
                                                 </>
                                               )}
@@ -343,9 +362,46 @@ export default function ProductInformation() {
                                       )}
                                     </div>
                                   ))}
-                                  <Button size="sm" variant="outline" onClick={() => handleAddArrayField(fieldConfig.key)} disabled={fieldConfig.readonly || fieldConfig.isInheritedChannelValue} className="w-fit">
-                                    <span className="text-sm font-medium">+ Add {field.label}</span>
-                                  </Button>
+                                  <div className="flex items-center">
+                                    <Button variant="outline" onClick={() => handleAddArrayField(fieldConfig.key)} disabled={fieldConfig.readonly || fieldConfig.isInheritedChannelValue} className="w-fit">
+                                      <span className="text-sm font-medium">+ Add {field.label}</span>
+                                    </Button>
+                                    {activeTab === 'default' && !field.hideCopy && (
+                                      <>
+                                        <div className="h-10 border-l border-[#E4E4E7] mx-2"></div>
+                                        <CopyAction
+                                          field={field.key}
+                                          onCopyConfirm={handleCopyConfirm}
+                                          disabled={isValueEmpty(getProductFieldValue(field.key))}
+                                          icon={<ClipboardIcon />}
+                                        />
+                                      </>
+                                    )}
+                                    {activeTab === 'channel-specific' && field.differsOn && (
+                                      <>
+                                        <div className="h-10 border-l border-[#E4E4E7] mx-2"></div>
+                                        <div className="flex items-center gap-2">
+                                          <LinkAction
+                                            field={field.key}
+                                            currentValue={getProductFieldValue(field.key)}
+                                            defaultValue={getDefaultValue(field.key)}
+                                            isConnected={isValueConnected(field.key)}
+                                            onRestore={restoreChannelValue}
+                                            onChangeToChannelSpecific={handleChangeToChannelSpecific}
+                                            disabled={false}
+                                          />
+                                          {isChannelSpecific(field) && (
+                                            <CopyToChannelsAction
+                                              icon={<ClipboardIcon />}
+                                              field={field.key}
+                                              onCopyConfirm={handleCopyConfirm}
+                                              disabled={isValueConnected(field.key) || isValueEmpty(getProductFieldValue(field.key))}
+                                            />
+                                          )}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -389,7 +445,7 @@ export default function ProductInformation() {
                                             isConnected={isValueConnected(field.key)}
                                             onRestore={restoreChannelValue}
                                             onChangeToChannelSpecific={handleChangeToChannelSpecific}
-                                            disabled={isValueConnected(field.key) ? !value : false}
+                                            disabled={false}
                                           />
                                           {isChannelSpecific(field) ? (
                                             <CopyToChannelsAction
@@ -454,13 +510,15 @@ export default function ProductInformation() {
                                               >
                                                 <ClipboardIcon />
                                               </button>
-                                            ) : (
+                                            ) : !field.hideCopy ? (
                                               <CopyAction
                                                 field={field.key}
                                                 onCopyConfirm={handleCopyConfirm}
                                                 disabled={isValueEmpty(getProductFieldValue(field.key))}
                                                 icon={<ClipboardIcon />}
                                               />
+                                            ) : (
+                                              <div className="h-10 w-10 shrink-0"></div>
                                             )}
                                             <div className="h-10 border-l border-[#E4E4E7]"></div>
                                           </>
@@ -474,7 +532,7 @@ export default function ProductInformation() {
                                               isConnected={isValueConnected(field.key)}
                                               onRestore={restoreChannelValue}
                                               onChangeToChannelSpecific={handleChangeToChannelSpecific}
-                                              disabled={isValueConnected(field.key) ? isValueEmpty(getProductFieldValue(field.key)) : false}
+                                              disabled={false}
                                             />
                                             {isChannelSpecific(field) ? (
                                               <CopyToChannelsAction

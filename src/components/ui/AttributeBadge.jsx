@@ -19,7 +19,7 @@ export default function AttributeBadge({ differsOn, diffLabels, ...rest }) {
   const tooltipText = diffLabels[differsOn] || '';
 
   return (
-    <div className="w-12 h-6 shrink-0 flex items-center justify-center" data-tour="attribute-badge" {...rest}>
+    <div className="w-12 h-6 shrink-0 flex items-center justify-start" data-tour="attribute-badge" {...rest}>
       <Tooltip>
         <TooltipTrigger asChild>
           <Badge 

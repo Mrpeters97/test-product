@@ -60,7 +60,7 @@ export default function ChangeChannelValueDialog({
         <DialogHeader>
           <DialogTitle>Changing to channel specific value</DialogTitle>
           <DialogDescription>
-            This will remove all values and translations for this attribute.
+            The default values will be copied to this channel. From here you can make channel-specific changes. This will disconnect the link with the default values.
           </DialogDescription>
         </DialogHeader>
 
