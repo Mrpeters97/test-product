@@ -10,6 +10,7 @@ import {
   DialogDescription,
 } from '.';
 import { CopyIconWhite } from './Icons';
+import { VARIANTS } from '../../context/ProductContext2';
 
 const CopyIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="12" viewBox="0 0 15 12" fill="none">
@@ -19,7 +20,9 @@ const CopyIcon = () => (
 
 export default function CopyAction({ field, onCopyConfirm, disabled, icon }) {
   const [isOpen, setIsOpen] = useState(false);
-  const copyOption = 'variants'; // Only option: All variants
+  const copyOption = 'variants';
+
+  const title = `Copy to all ${VARIANTS.length} variants`;
 
   const handleConfirm = () => {
     onCopyConfirm(field, copyOption);
@@ -45,35 +48,16 @@ export default function CopyAction({ field, onCopyConfirm, disabled, icon }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Copy values to</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Directly copy this value to other variants. Existing values will be overwritten and this action cannot be undone.
+            This value will be copied to all variants. Any existing values will be overwritten, this action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 my-4">
-          <div className="flex items-start gap-3 p-3 border rounded-lg bg-gray-50">
-            <div className="mt-1">
-              <input
-                type="radio"
-                name={`copy-option-${field}`}
-                value="variants"
-                checked={true}
-                readOnly
-                className="cursor-pointer"
-              />
-            </div>
-            <div>
-              <div className="font-medium text-sm">All variants</div>
-              <div className="text-xs text-gray-600">Copies this value to all variants</div>
-            </div>
-          </div>
-        </div>
-
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>Close</Button>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
           <Button onClick={handleConfirm} className="gap-[var(--Gap-2,8px)] rounded-[var(--border-radius-md,6px)] bg-[var(--base-foreground,#18181B)] px-[var(--Gap-4,16px)] py-[var(--Gap-2-5,10px)] text-[#FAFAFA] hover:bg-[var(--base-foreground,#18181B)]/90">
-            Copy to
+            Copy to all {VARIANTS.length} variants
             <CopyIconWhite />
           </Button>
         </DialogFooter>

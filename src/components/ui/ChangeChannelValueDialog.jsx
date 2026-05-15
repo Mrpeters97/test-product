@@ -16,10 +16,26 @@ import { LinkIcon } from './Icons'
 
 export default function ChangeChannelValueDialog({
   field,
+  differsOn,
   onConfirm,
   disabled
 }) {
   const [isOpen, setIsOpen] = useState(false)
+
+  const isVariant = differsOn?.includes('variant')
+  const isTranslatable = differsOn?.includes('language')
+
+  const title = isVariant
+    ? 'Changing to channel and variant specific value'
+    : 'Changing to channel specific value'
+
+  const description = isVariant
+    ? isTranslatable
+      ? 'This value and its translations will become editable for this channel and variant. After that, they will no longer follow changes to the default value.'
+      : 'This value will become editable for this channel and variant. After that, it will no longer follow changes to the default value.'
+    : isTranslatable
+      ? 'This value and its translations will become editable for this channel. After that, they will no longer follow changes to the default value.'
+      : 'This value will become editable for this channel. After that, it will no longer follow changes to the default value.'
 
   const handleContinue = () => {
     try {
@@ -58,10 +74,8 @@ export default function ChangeChannelValueDialog({
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Changing to channel specific value</DialogTitle>
-          <DialogDescription>
-            The default values will be copied to this channel. From here you can make channel-specific changes. This will disconnect the link with the default values.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <DialogFooter>

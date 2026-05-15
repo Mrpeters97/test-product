@@ -39,7 +39,7 @@ const UnlinkIcon = () => (
   </svg>
 )
 
-export default function LinkAction({ field, currentValue, defaultValue, isConnected, onRestore, onChangeToChannelSpecific, disabled }) {
+export default function LinkAction({ field, differsOn, currentValue, defaultValue, isConnected, onRestore, onChangeToChannelSpecific, disabled }) {
   const [isOpen, setIsOpen] = useState(false)
 
   const handleRestore = () => {
@@ -56,6 +56,7 @@ export default function LinkAction({ field, currentValue, defaultValue, isConnec
       {isConnected ? (
         <ChangeChannelValueDialog
           field={field}
+          differsOn={differsOn}
           onConfirm={handleChangeToChannelSpecific}
           disabled={disabled}
         />

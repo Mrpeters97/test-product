@@ -5,6 +5,8 @@ const ProductContext = createContext()
 const ARRAY_FIELDS = new Set(['ean', 'pros', 'cons', 'productImages', 'videoReviews', 'suitableForGender', 'boxContents'])
 export const SUPPORTED_LANGUAGES = ['English', 'German', 'Dutch', 'French', 'Italian']
 
+export const VARIANTS = ['128 Black', '256 Black', '128 Blue', '256 Blue', '128 Orange', '256 Orange', '128 Pink']
+
 const VARIANT_MPC_SUFFIXES = {
   '128 Black': '01',
   '256 Black': '02',
@@ -207,7 +209,6 @@ export function ProductProvider({ children }) {
         fieldData.variantChannelValues = {}
       }
 
-      const VARIANTS = ['128 Black', '256 Black', '128 Blue', '256 Blue', '128 Orange', '256 Orange', '128 Pink']
       const CHANNELS = ['Belsimpel.nl', 'Gomibo.hu', 'Gomibo.pl', 'Gomibo.be', 'Gomibo.ie', 'Gomibo.pt', 'Gomibo.bg', 'Gomibo.it', 'Gomibo.ro', 'Gomibo.cy', 'Gomibo.hr', 'Gomibo.si', 'Gomibo.dk', 'Gomibo.lv', 'Gomibo.sk', 'Gomibo.de', 'Gomibo.lt', 'Gomibo.es', 'Gomibo.ee', 'Gomibo.lu', 'Gomibo.cz', 'Gomibo.fi', 'Gomibo.mt', 'Gomibo.co.uk', 'Gomibo.fr', 'Gomibo.no', 'Gomibo.se', 'Gomibo.gr', 'Gomibo.at', 'Gomibo.ch']
 
       const keysToUpdate = []

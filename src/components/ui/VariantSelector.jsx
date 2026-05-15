@@ -23,11 +23,13 @@ export default function VariantSelector() {
   const [selectorHeight, setSelectorHeight] = useState(null)
   const [headingHeight, setHeadingHeight] = useState(null)
   const [filterWidth, setFilterWidth] = useState(null)
+  const [channelHighlighted, setChannelHighlighted] = useState(false)
   const containerRef = useRef(null)
   const selectorRef = useRef(null)
   const headingRef = useRef(null)
   const languageComboboxRef = useRef(null)
   const filterWidthMeasureRef = useRef(null)
+  const channelContainerRef = useRef(null)
 
   const progress = Math.min(scrollY / 60, 1)
   const isSticky = scrollY >= STICKY_CONFIG.triggerScroll
@@ -85,6 +87,27 @@ export default function VariantSelector() {
       setFilterWidth(filterWidthMeasureRef.current.offsetWidth)
     }
   }, [activeTab])
+
+  // Highlight channel selector when switching to channel-specific tab, auto-dismiss after 800ms
+  useEffect(() => {
+    if (activeTab === 'channel-specific') {
+      setChannelHighlighted(true)
+      const timer = setTimeout(() => setChannelHighlighted(false), 1800)
+      return () => clearTimeout(timer)
+    }
+  }, [activeTab])
+
+  // Also clear highlight on outside click
+  useEffect(() => {
+    if (!channelHighlighted) return
+    const handlePointerDown = (e) => {
+      if (channelContainerRef.current && !channelContainerRef.current.contains(e.target)) {
+        setChannelHighlighted(false)
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [channelHighlighted])
 
   // Build grouped options for language selector (only in channel-specific mode)
   const availableLanguages = activeTab === 'channel-specific' ? getAvailableLanguages(channel) : LANGUAGE_OPTIONS.map(l => l.value)
@@ -234,7 +257,7 @@ export default function VariantSelector() {
           }}
         >
           <div className="flex-1 flex flex-col gap-2">
-            <label style={LABEL_STYLE}>Variant</label>
+            <label style={LABEL_STYLE}>Product variant</label>
             <Combobox
               options={VARIANT_OPTIONS}
               value={variant}
@@ -248,15 +271,23 @@ export default function VariantSelector() {
 
           {activeTab === 'channel-specific' && (
             <>
-              <div className="flex-0 flex flex-col gap-2" style={{ minWidth: '180px' }}>
+              <div ref={channelContainerRef} className="flex-0 flex flex-col gap-2" style={{ minWidth: '180px' }}>
                 <label style={LABEL_STYLE}>Channel</label>
-                <Combobox
-                  options={CHANNEL_OPTIONS}
-                  value={channel}
-                  onValueChange={handleChannelChange}
-                  placeholder="Belsimpel.nl"
-                  className="bg-white border-gray-200 h-10 shadow-none"
-                />
+                <div style={{
+                  borderRadius: '6px',
+                  outline: '2px solid',
+                  outlineColor: channelHighlighted ? '#3B82F6' : 'transparent',
+                  outlineOffset: '1px',
+                  transition: 'outline-color 0.5s ease',
+                }}>
+                  <Combobox
+                    options={CHANNEL_OPTIONS}
+                    value={channel}
+                    onValueChange={handleChannelChange}
+                    placeholder="Belsimpel.nl"
+                    className="bg-white border-gray-200 h-10 shadow-none"
+                  />
+                </div>
               </div>
 
               <div style={DIVIDER_STYLE} />

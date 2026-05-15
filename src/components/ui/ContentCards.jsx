@@ -383,6 +383,7 @@ export default function ProductInformation() {
                                         <div className="flex items-center gap-2">
                                           <LinkAction
                                             field={field.key}
+                                            differsOn={field.differsOn}
                                             currentValue={getProductFieldValue(field.key)}
                                             defaultValue={getDefaultValue(field.key)}
                                             isConnected={isValueConnected(field.key)}
@@ -440,6 +441,7 @@ export default function ProductInformation() {
                                         <>
                                           <LinkAction
                                             field={field.key}
+                                            differsOn={field.differsOn}
                                             currentValue={value}
                                             defaultValue={getDefaultValue(field.key)}
                                             isConnected={isValueConnected(field.key)}
@@ -527,6 +529,7 @@ export default function ProductInformation() {
                                           <>
                                             <LinkAction
                                               field={field.key}
+                                              differsOn={field.differsOn}
                                               currentValue={getProductFieldValue(field.key)}
                                               defaultValue={getDefaultValue(field.key)}
                                               isConnected={isValueConnected(field.key)}
